@@ -1,17 +1,18 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 
-import { getUserByEmail, createUser } from '../db/users';
+import { getUserByUsername, createUser, getUserBySessionToken } from '../db/users';
 import { random, authentication } from '../helpers';
 
 export const login = async (req: express.Request, res: express.Response) => {
     try {
-        const {email, password} = req.body;
+        const {username, password} = req.body;
 
-        if (!email || !password) {
+        if (!username || !password) { 
             return res.sendStatus(400);
         }
 
-        const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
+        const user = await getUserByUsername(username).select('+authentication.salt +authentication.password');
 
         if(!user) {
             return res.sendStatus(400);
@@ -23,14 +24,18 @@ export const login = async (req: express.Request, res: express.Response) => {
             return res.sendStatus(403);
         }
 
-        const salt = random();
-        user.authentication.sessionToken = authentication(salt, user._id.toString());
+        //generate JWT
+        const sessionToken = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
+        user.authentication.sessionToken = sessionToken;
+
+        // const salt = random();
+        // user.authentication.sessionToken = authentication(salt, user._id.toString());
 
         await user.save();
 
-        res.cookie('TICKETING-AUTH', user.authentication.sessionToken, { domain: 'localhost', path: '/'});
+        // res.cookie('TICKETING-AUTH', sessionToken, { domain: 'localhost', path: '/'});
 
-        return res.status(200).json(user).end();
+        return res.status(200).json({user, sessionToken}).end();
     }catch (error) {
         console.log(error);
         return res.sendStatus(400);
@@ -45,7 +50,7 @@ export const register = async (req: express.Request, res: express.Response) => {
             return res.sendStatus(400);
         }
 
-        const existingUser = await getUserByEmail(email);
+        const existingUser = await getUserByUsername(username);
 
         if(existingUser) {
             return res.sendStatus(400);
@@ -61,9 +66,39 @@ export const register = async (req: express.Request, res: express.Response) => {
             },
         });
 
-        return res.status(200).json(user).end();
+        //generate JWT
+        const sessionToken = jwt.sign({ userId: user._id }, 'SECRET', { expiresIn: '1h' });
+
+        return res.status(200).json({user, sessionToken}).end();
     }catch(error){
         console.log(error);
         return res.sendStatus(400);
     }
-}
+};
+
+// export const logout = async (req: express.Request, res: express.Response) => {
+//     try {
+//         const sessionToken = req.headers['TICKETING-AUTH'];
+
+//         if (!sessionToken) {
+//             return res.sendStatus(401);
+//         }
+
+//         const user = await getUserBySessionToken(sessionToken);
+
+//         if (!user) {
+//             return res.sendStatus(301);
+//         }
+
+//         user.authentication.sessionToken = null;
+
+//         await user.save();
+
+//         res.clearCookie('TICKETING-AUTH', { domain: 'localhost', path: '/'});
+
+//         return res.sendStatus(200);
+//     } catch (error) {
+//         console.log(error);
+//         return res.sendStatus(500);
+//     }
+// };

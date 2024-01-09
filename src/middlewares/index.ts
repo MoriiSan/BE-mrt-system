@@ -1,4 +1,5 @@
 import express from 'express';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { get, merge } from 'lodash';
 
 import { getUserBySessionToken } from '../db/users';
@@ -25,14 +26,20 @@ export const isOwner = async (req: express.Request, res: express.Response, next:
 
 export const isAuthenticated = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        const sessionToken = req.cookies['JHENNA-AUTH'];
+        const token = req.headers['authorization'];
 
-        if (!sessionToken){
+        if (!token){
             return res.sendStatus(403);
         }
 
-        const existingUser = await getUserBySessionToken(sessionToken);
+        const decoded = jwt.verify(token, 'secretKey') as JwtPayload;
 
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+        if (decoded.exp && currentTimestamp > decoded.exp) {
+            return res.sendStatus(401).json('Token has expired');
+        }
+
+        const existingUser = await getUserBySessionToken(token);
         if (!existingUser) {
             return res.sendStatus(403);
         }
@@ -42,6 +49,9 @@ export const isAuthenticated = async (req: express.Request, res: express.Respons
         next();
     } catch (error) {
         console.log(error);
+        if (error instanceof jwt.JsonWebTokenError) {
+            return res.sendStatus(403);
+        }
         return res.sendStatus(400);
     }
 };

@@ -24,10 +24,16 @@ server.listen(8080, () => {
     console.log('Server running on http://localhost:8080/');
 });
 
-const MONGO_URL = 'mongodb+srv://jhenna-mrt:TThJH5UEnT8IL9hA@mrt-system.cquj5ag.mongodb.net/?retryWrites=true&w=majority'
+const MONGO_URL = `mongodb+srv://jhenna-mrt:TThJH5UEnT8IL9hA@mrt-system.cquj5ag.mongodb.net/mrt`
 
 mongoose.Promise = Promise;
-mongoose.connect(MONGO_URL);
+mongoose.connect(MONGO_URL, {
+    dbName: 'mrt', // Specify the database name here
+}).then(() => {
+    console.log('Connected to MRT-SYSTEM');
+}).catch((err) => {
+    console.error('Error connecting to MRT-SYSTEM:', err);
+});
 mongoose.connection.on('error', (error: Error)=> console.log(error)); 
 
 app.use('/', router())
