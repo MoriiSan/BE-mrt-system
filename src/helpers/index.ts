@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-const SECRET = 'JHENNA-REST-API';
+const SECRET = 'TICKETINGSYSTEM-REST-API';
 
 export const random = () => crypto.randomBytes(128).toString('base64');
 export const authentication = (salt: string, password: string) => {
