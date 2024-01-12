@@ -5,7 +5,6 @@ import {
     createCard,
     deleteCardByUid,
     updateCardByUid,
-    CardModel
 } from '../db/cards';
 
 export const getAllCards = async (req: express.Request, res: express.Response) => {
