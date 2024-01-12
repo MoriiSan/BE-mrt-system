@@ -75,30 +75,3 @@ export const register = async (req: express.Request, res: express.Response) => {
         return res.sendStatus(400);
     }
 };
-
-// export const logout = async (req: express.Request, res: express.Response) => {
-//     try {
-//         const sessionToken = req.headers['TICKETING-AUTH'];
-
-//         if (!sessionToken) {
-//             return res.sendStatus(401);
-//         }
-
-//         const user = await getUserBySessionToken(sessionToken);
-
-//         if (!user) {
-//             return res.sendStatus(301);
-//         }
-
-//         user.authentication.sessionToken = null;
-
-//         await user.save();
-
-//         res.clearCookie('TICKETING-AUTH', { domain: 'localhost', path: '/'});
-
-//         return res.sendStatus(200);
-//     } catch (error) {
-//         console.log(error);
-//         return res.sendStatus(500);
-//     }
-// };
