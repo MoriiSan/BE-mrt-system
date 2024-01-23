@@ -28,12 +28,7 @@ export const login = async (req: express.Request, res: express.Response) => {
         const sessionToken = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
         user.authentication.sessionToken = sessionToken;
 
-        // const salt = random();
-        // user.authentication.sessionToken = authentication(salt, user._id.toString());
-
         await user.save();
-
-        // res.cookie('TICKETING-AUTH', sessionToken, { domain: 'localhost', path: '/'});
 
         return res.status(200).json({user, sessionToken}).end();
     }catch (error) {
