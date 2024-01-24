@@ -15,23 +15,22 @@ export const getMrtFare = async (req: express.Request, res: express.Response) =>
     }
 };
 
-
 export const updateMrtFare = async (req: express.Request, res: express.Response) => {
     try {
-        const { fare } = req.params;
+        const { fareId } = req.params;
+        const { fareKm } = req.body;
 
-
-        if (!fare) {
+        if (!fareKm) {
             return res.sendStatus(400);
         }
 
-        const adminConfigs = await updateFare(Number(fare));
+        const fare = await updateFare(Number(fareId), { fareKm });
 
-        if (!adminConfigs) {
+        if (!fare) {
             return res.sendStatus(404);
         }
 
-        return res.status(200).json(adminConfigs);
+        return res.status(200).json(fare);
     } catch (error) {
         console.log(error);
         return res.sendStatus(400);
