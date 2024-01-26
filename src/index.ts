@@ -26,7 +26,7 @@ server.listen(process.env.PORT, () => {
     console.log(`Server running on ${process.env.REACT_APP_URL}`);
 });
 
-const MONGO_URL = (process.env.MONGO_DB)
+const MONGO_URL = (`${process.env.MONGO_DB}`)
 
 mongoose.Promise = Promise;
 mongoose.connect(MONGO_URL, {
