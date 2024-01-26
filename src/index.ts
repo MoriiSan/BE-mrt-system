@@ -23,7 +23,7 @@ app.use(bodyParser.json());
 const server = http.createServer(app);
 
 server.listen(process.env.PORT, () => {
-    console.log(`Server running on ${process.env.REACT_APP_URL}`);
+    console.log(`Server running on http://localhost:8080/`);
 });
 
 const MONGO_URL = (`${process.env.MONGO_DB}`)
