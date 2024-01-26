@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
 import router from './router';
 
@@ -22,7 +23,7 @@ app.use(bodyParser.json());
 const server = http.createServer(app);
 
 server.listen(process.env.PORT, () => {
-    console.log(`Server running on ${process.env.ENDPOINT}`);
+    console.log(`Server running on ${process.env.REACT_APP_URL}`);
 });
 
 const MONGO_URL = (process.env.MONGO_DB)
