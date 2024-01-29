@@ -23,7 +23,7 @@ app.use(bodyParser.json());
 const server = http.createServer(app);
 
 server.listen(process.env.PORT, () => {
-    console.log(`Server running on http://localhost:8080/`);
+    console.log(`Server running on http://localhost:${process.env.PORT}/`);
 });
 
 const MONGO_URL = (`${process.env.MONGO_DB}`)
@@ -32,7 +32,7 @@ mongoose.Promise = Promise;
 mongoose.connect(MONGO_URL, {
     dbName: 'mrt', // Specify the database name here
 }).then(() => {
-    console.log('Connected to MRT-SYSTEM');
+    console.log('Connected to MRT-SYSTEM-DB');
 }).catch((err) => {
     console.error('Error connecting to MRT-SYSTEM:', err);
 });
