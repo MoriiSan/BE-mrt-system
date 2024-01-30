@@ -17,5 +17,6 @@ export const createStation = (values: Record<string, any>) => new StationModel(v
     .save().then((station) => station.toObject());
 export const deleteStationByName = (shortName: string) => StationModel.findOneAndDelete({ shortName });
 export const updateStationByName = (shortName: string, values: Record<string, any>) => StationModel.findOneAndUpdate({ shortName }, values);
+export const addStationConnsByName = (shortName: string, values: Record<string, any>) => StationModel.updateOne({ shortName }, { $push: { stationConn: values.stationConn } });
 
 

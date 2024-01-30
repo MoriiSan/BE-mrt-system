@@ -5,6 +5,7 @@ import {
     createStation,
     deleteStationByName,
     updateStationByName,
+    addStationConnsByName,
 } from '../db/stations';
 
 export const getAllStations = async (req: express.Request, res: express.Response) => {
@@ -65,6 +66,28 @@ export const createAStation = async (req: express.Request, res: express.Response
     }
 };
 
+export const updateStation = async (req: express.Request, res: express.Response) => {
+    try {
+        const { shortName } = req.params;
+        const { stationName, stationCoord, stationConn } = req.body;
+
+        if (!stationCoord && !stationConn && !stationName) {
+            return res.sendStatus(400);
+        }
+
+        const station = await updateStationByName((shortName), { stationName, stationCoord, stationConn });
+
+        if (!station) {
+            return res.sendStatus(404);
+        }
+
+        return res.status(200).json(station);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+};
+
 export const deleteStation = async (req: express.Request, res: express.Response) => {
     try {
         const { shortName } = req.params;
@@ -82,19 +105,23 @@ export const deleteStation = async (req: express.Request, res: express.Response)
     }
 };
 
-export const updateStation = async (req: express.Request, res: express.Response) => {
+export const AddStationConns = async (req: express.Request, res: express.Response) => {
     try {
         const { shortName } = req.params;
-        const [stationCoord] = req.body;
         const { stationConn } = req.body;
 
-        if (!stationCoord || !stationConn) {
-            return res.sendStatus(400);
-        }
-
-        const station = await updateStationByName((shortName), {stationCoord, stationConn});
+        const station = await getStationByName(shortName);
 
         if (!station) {
+            return res.sendStatus(404);
+        }
+        if (station.stationConn.includes(stationConn)) {
+            return res.sendStatus(400)
+        }
+
+        const addStationConn = await addStationConnsByName(shortName, { stationConn });
+
+        if (!addStationConn) {
             return res.sendStatus(404);
         }
 
