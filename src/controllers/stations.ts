@@ -69,13 +69,13 @@ export const createAStation = async (req: express.Request, res: express.Response
 export const updateStation = async (req: express.Request, res: express.Response) => {
     try {
         const { shortName } = req.params;
-        const { stationName, stationCoord, stationConn } = req.body;
+        const { newShortName, stationName, stationCoord, stationConn } = req.body;
 
-        if (!stationCoord && !stationConn && !stationName) {
+        if (!stationCoord && !stationConn && !stationName && !shortName) {
             return res.sendStatus(400);
         }
 
-        const station = await updateStationByName((shortName), { stationName, stationCoord, stationConn });
+        const station = await updateStationByName(shortName, { shortName: newShortName, stationName, stationCoord, stationConn });
 
         if (!station) {
             return res.sendStatus(404);
