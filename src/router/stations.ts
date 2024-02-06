@@ -5,8 +5,7 @@ import {
     getStation,
     createAStation,
     deleteStation,
-    updateStation,
-    AddStationConns,
+    updateStation
 } from '../controllers/stations';
 
 export default (router: express.Router) => {
@@ -15,6 +14,6 @@ export default (router: express.Router) => {
     router.post('/stations/create-station', createAStation);
     router.patch('/stations/update-station/:_id', updateStation);
     router.delete('/stations/delete-station/:shortName', deleteStation);
-    router.patch('/stations/add-connection/:shortName', AddStationConns);
+    // router.patch('/stations/add-connection/:shortName', AddStationConns);
     
 };

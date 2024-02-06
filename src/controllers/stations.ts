@@ -47,23 +47,43 @@ export const createAStation = async (req: express.Request, res: express.Response
             return res.sendStatus(400);
         }
 
-        const existingStation = await getStationByName(shortName || stationName || stationCoord);
 
+        const existingStation = await getStationByName(shortName || stationName || stationCoord);
         if (existingStation) {
             return res.status(400).send({ message: `Already Exist` });
         }
 
-        const newStation = await createStation({
-            shortName,
-            stationName,
-            stationCoord,
-            stationConn
-        });
+        //check if connections exist
+        for (let i = 0; i < stationConn.length; i++) {
+            const checkExist = await StationModel.findOne({ shortName: stationConn[i] })
+            if (!checkExist) {
+                return res.status(400).send({ message: `${stationConn[i]} Connection Does Not Exist!` });
+            }
+        }
 
-        return res.status(201).json(newStation);
+        //create connection on connections
+        for (let i = 0; i < stationConn.length; i++) {
+            const UpdateConnection = await StationModel.findOneAndUpdate(
+                { shortName: stationConn[i] },
+                { $push: { stationConn: shortName } },
+                { new: true }
+            )
+        }
+
+        // create the station
+        const stationNew = await createStation({
+            stationName: stationName,
+            stationCoord: stationCoord,
+            shortName: shortName,
+            stationConn: stationConn
+        })
+        console.log(stationNew)
+
+        return res.status(200).send({ message: 'Successfully Created' })
+
     } catch (error) {
-        console.error('Error creating station:', error);
-        return res.sendStatus(500);
+        console.log(error);
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
@@ -176,42 +196,55 @@ export const deleteStation = async (req: express.Request, res: express.Response)
     try {
         const { shortName } = req.params;
 
-        const deletedStation = await deleteStationByName(shortName);
+        // const deletedStation = await deleteStationByName(shortName);
+        // if (!deletedStation) {
+        //     return res.sendStatus(404);
+        // }
 
-        if (!deletedStation) {
-            return res.sendStatus(404);
+        const reference = await StationModel.findOneAndDelete({ shortName: shortName });
+
+        //remove deleted station from connections of other data
+        if (reference.stationConn) {
+            for (let i = 0; i < reference.stationConn.length; i++) {
+                console.log(reference.stationConn[i], reference.shortName)
+                const clear = await StationModel.findOneAndUpdate(
+                    { shortName: reference.stationConn[i] },
+                    { $pull: { stationConn: reference.shortName } },
+                    { new: true }
+                )
+            }
         }
+        return res.status(200).send({ message: 'Successfully Deleted', reference })
 
-        return res.json(deletedStation);
     } catch (error) {
         console.log(error);
-        return res.sendStatus(400);
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
-export const AddStationConns = async (req: express.Request, res: express.Response) => {
-    try {
-        const { shortName } = req.params;
-        const { stationConn } = req.body;
+// export const AddStationConns = async (req: express.Request, res: express.Response) => {
+//     try {
+//         const { shortName } = req.params;
+//         const { stationConn } = req.body;
 
-        const station = await getStationByName(shortName);
+//         const station = await getStationByName(shortName);
 
-        if (!station) {
-            return res.sendStatus(404);
-        }
-        if (station.stationConn.includes(stationConn)) {
-            return res.sendStatus(400)
-        }
+//         if (!station) {
+//             return res.sendStatus(404);
+//         }
+//         if (station.stationConn.includes(stationConn)) {
+//             return res.sendStatus(400)
+//         }
 
-        const addStationConn = await addStationConnsByName(shortName, { stationConn });
+//         const addStationConn = await addStationConnsByName(shortName, { stationConn });
 
-        if (!addStationConn) {
-            return res.sendStatus(404);
-        }
+//         if (!addStationConn) {
+//             return res.sendStatus(404);
+//         }
 
-        return res.status(200).json(station);
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
-};
+//         return res.status(200).json(station);
+//     } catch (error) {
+//         console.log(error);
+//         return res.sendStatus(400);
+//     }
+// };
