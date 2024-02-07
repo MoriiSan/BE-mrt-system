@@ -38,24 +38,24 @@ export const getStation = async (req: express.Request, res: express.Response) =>
 
 export const createAStation = async (req: express.Request, res: express.Response) => {
     try {
-        const { shortName,
+        const {
             stationName,
             stationCoord,
             stationConn } = req.body;
 
-        if (!shortName || !stationName || !stationCoord || !stationConn) {
+        if (!stationName || !stationCoord || !stationConn) {
             return res.sendStatus(400);
         }
 
 
-        const existingStation = await getStationByName(shortName || stationName || stationCoord);
+        const existingStation = await getStationByName(stationName || stationCoord);
         if (existingStation) {
             return res.status(400).send({ message: `Already Exist` });
         }
 
         //check if connections exist
         for (let i = 0; i < stationConn.length; i++) {
-            const checkExist = await StationModel.findOne({ shortName: stationConn[i] })
+            const checkExist = await StationModel.findOne({ stationName: stationConn[i] })
             if (!checkExist) {
                 return res.status(400).send({ message: `${stationConn[i]} Connection Does Not Exist!` });
             }
@@ -64,8 +64,8 @@ export const createAStation = async (req: express.Request, res: express.Response
         //create connection on connections
         for (let i = 0; i < stationConn.length; i++) {
             const UpdateConnection = await StationModel.findOneAndUpdate(
-                { shortName: stationConn[i] },
-                { $push: { stationConn: shortName } },
+                { stationName: stationConn[i] },
+                { $push: { stationConn: stationName } },
                 { new: true }
             )
         }
@@ -74,12 +74,10 @@ export const createAStation = async (req: express.Request, res: express.Response
         const stationNew = await createStation({
             stationName: stationName,
             stationCoord: stationCoord,
-            shortName: shortName,
             stationConn: stationConn
         })
-        console.log(stationNew)
 
-        return res.status(200).send({ message: 'Successfully Created' })
+        return res.status(200).send({ message: "Station created successfully!" })
 
     } catch (error) {
         console.log(error);
@@ -90,10 +88,9 @@ export const createAStation = async (req: express.Request, res: express.Response
 export const updateStation = async (req: express.Request, res: express.Response) => {
     try {
         const id = req.params._id;
-        const { shortName, stationName, stationCoord, stationConn } = req.body;
+        const { stationName, stationCoord, stationConn } = req.body;
 
-        console.log(id, shortName, stationName)
-        if (!stationCoord || !stationConn || !stationName || !shortName) {
+        if (!stationCoord || !stationConn || !stationName) {
             return res.sendStatus(400);
         }
 
@@ -109,8 +106,8 @@ export const updateStation = async (req: express.Request, res: express.Response)
         if (reference.stationConn) {
             for (let i = 0; i < reference.stationConn.length; i++) {
                 await StationModel.findOneAndUpdate(
-                    { shortName: reference.shortName[i] },
-                    { $pull: { stationConn: reference.shortName } },
+                    { stationName: reference.stationName[i] },
+                    { $pull: { stationConn: reference.stationName } },
                     { new: true }
                 )
             }
@@ -118,7 +115,6 @@ export const updateStation = async (req: express.Request, res: express.Response)
 
         //check if all values are the saem
         if (reference.stationName === stationName &&
-            reference.shortName === shortName &&
             JSON.stringify(reference.stationCoord) === JSON.stringify(stationCoord) &&
             JSON.stringify(reference.stationConn) === JSON.stringify(stationConn)) {
             return res.status(400).send({ message: `No Changes Found` });
@@ -128,7 +124,6 @@ export const updateStation = async (req: express.Request, res: express.Response)
         const findDupe = await StationModel.find({
             $or: [
                 { stationName: stationName },
-                { shortName: shortName },
                 { coordinates: stationCoord }
             ]
         });
@@ -138,7 +133,7 @@ export const updateStation = async (req: express.Request, res: express.Response)
 
         //check if connections exist
         for (let i = 0; i < stationConn.length; i++) {
-            const checkExist = await StationModel.findOne({ shortName: stationConn[i] })
+            const checkExist = await StationModel.findOne({ stationName: stationConn[i] })
             if (!checkExist) {
                 return res.status(400).send({ message: `${stationConn[i]} Connection Does Not Exist!` });
             }
@@ -146,18 +141,18 @@ export const updateStation = async (req: express.Request, res: express.Response)
 
         //check if it is trying to connect to itself
         for (let i = 0; i < stationConn.length; i++) {
-            if (stationConn[i] == reference.shortName || stationConn[i] == shortName) {
+            if (stationConn[i] == reference.stationName || stationConn[i] == stationName) {
                 return res.status(400).send({ message: `Cannot Connect to Own Station` });
             }
         }
 
-        //check if stationShortName has been modified and remove connectionName
-        if (shortName != reference.shortName || stationConn != reference.stationConn) {
+        //check if stationName has been modified and remove connectionName
+        if (stationName != reference.stationName || stationConn != reference.stationConn) {
             if (reference.stationConn) {
                 for (let i = 0; i < reference.stationConn.length; i++) {
                     await StationModel.findOneAndUpdate(
-                        { shortName: reference.stationConn[i] },
-                        { $pull: { stationConn: reference.shortName } },
+                        { stationName: reference.stationConn[i] },
+                        { $pull: { stationConn: reference.stationName } },
                         { new: true }
                     )
                 }
@@ -167,8 +162,8 @@ export const updateStation = async (req: express.Request, res: express.Response)
         // create connection on connections
         for (let i = 0; i < stationConn.length; i++) {
             await StationModel.findOneAndUpdate(
-                { shortName: stationConn[i] },
-                { $push: { stationConn: shortName } },
+                { stationName: stationConn[i] },
+                { $push: { stationConn: stationName } },
                 { new: true }
             )
         }
@@ -179,7 +174,6 @@ export const updateStation = async (req: express.Request, res: express.Response)
             {
                 stationName: stationName,
                 stationCoord: stationCoord,
-                shortName: shortName,
                 stationConn: stationConn
             },
             { new: true }
@@ -194,22 +188,17 @@ export const updateStation = async (req: express.Request, res: express.Response)
 
 export const deleteStation = async (req: express.Request, res: express.Response) => {
     try {
-        const { shortName } = req.params;
+        const { stationName } = req.params;
 
-        // const deletedStation = await deleteStationByName(shortName);
-        // if (!deletedStation) {
-        //     return res.sendStatus(404);
-        // }
-
-        const reference = await StationModel.findOneAndDelete({ shortName: shortName });
+        const reference = await StationModel.findOneAndDelete({ stationName: stationName });
 
         //remove deleted station from connections of other data
         if (reference.stationConn) {
             for (let i = 0; i < reference.stationConn.length; i++) {
-                console.log(reference.stationConn[i], reference.shortName)
+                console.log(reference.stationConn[i], reference.stationName)
                 const clear = await StationModel.findOneAndUpdate(
-                    { shortName: reference.stationConn[i] },
-                    { $pull: { stationConn: reference.shortName } },
+                    { stationName: reference.stationConn[i] },
+                    { $pull: { stationConn: reference.stationName } },
                     { new: true }
                 )
             }
@@ -221,30 +210,3 @@ export const deleteStation = async (req: express.Request, res: express.Response)
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 };
-
-// export const AddStationConns = async (req: express.Request, res: express.Response) => {
-//     try {
-//         const { shortName } = req.params;
-//         const { stationConn } = req.body;
-
-//         const station = await getStationByName(shortName);
-
-//         if (!station) {
-//             return res.sendStatus(404);
-//         }
-//         if (station.stationConn.includes(stationConn)) {
-//             return res.sendStatus(400)
-//         }
-
-//         const addStationConn = await addStationConnsByName(shortName, { stationConn });
-
-//         if (!addStationConn) {
-//             return res.sendStatus(404);
-//         }
-
-//         return res.status(200).json(station);
-//     } catch (error) {
-//         console.log(error);
-//         return res.sendStatus(400);
-//     }
-// };
