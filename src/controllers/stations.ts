@@ -195,7 +195,7 @@ export const deleteStation = async (req: express.Request, res: express.Response)
         //remove deleted station from connections of other data
         if (reference.stationConn) {
             for (let i = 0; i < reference.stationConn.length; i++) {
-                console.log(reference.stationConn[i], reference.stationName)
+                // console.log(reference.stationConn[i], reference.stationName)
                 const clear = await StationModel.findOneAndUpdate(
                     { stationName: reference.stationConn[i] },
                     { $pull: { stationConn: reference.stationName } },
