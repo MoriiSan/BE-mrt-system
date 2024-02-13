@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const COLLECTION_NAME = 'stations';
 
 const StationSchema = new mongoose.Schema({
-    shortName: String,
+    // shortName: String,
     stationName: String,
     stationCoord: [Number, Number],
     stationConn: Array<String>,

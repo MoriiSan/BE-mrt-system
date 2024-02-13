@@ -9,7 +9,7 @@ const FareSchema = new mongoose.Schema({
 
 export const FareModel = mongoose.model('Fare', FareSchema, COLLECTION_NAME);
 
-export const getFare = () => FareModel.find();
+export const getFare = () => FareModel.findOne();
 // export const getFareById = (fareId:number) => FareModel.findById(fareId);
 // export const updateFare = (fare: number) => FareModel.findOneAndUpdate({ fare });
 export const updateFare = (fareId: number, values: Record<string, any>) => FareModel.findOneAndUpdate({ fareId }, values);

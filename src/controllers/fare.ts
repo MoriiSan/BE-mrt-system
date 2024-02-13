@@ -8,7 +8,7 @@ export const getMrtFare = async (req: express.Request, res: express.Response) =>
     try {
         const adminConfigs = await getFare();
 
-        return res.status(200).json(adminConfigs);
+        return res.status(200).send(adminConfigs);
     } catch (error) {
         console.log(error);
         return res.sendStatus(400);
