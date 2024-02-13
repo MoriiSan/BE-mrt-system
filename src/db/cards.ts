@@ -5,6 +5,7 @@ const COLLECTION_NAME = 'cards';
 const CardSchema = new mongoose.Schema({
     uid: { type: Number, required: true },
     bal: { type: Number, required: true },
+    tapState: { type: String}
 }, { collection: COLLECTION_NAME });
 
 export const CardModel = mongoose.model('Card', CardSchema, COLLECTION_NAME);

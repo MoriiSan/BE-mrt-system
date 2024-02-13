@@ -5,6 +5,7 @@ import {
     createCard,
     deleteCardByUid,
     updateCardByUid,
+    CardModel,
 } from '../db/cards';
 
 export const getAllCards = async (req: express.Request, res: express.Response) => {
@@ -25,7 +26,7 @@ export const getCard = async (req: express.Request, res: express.Response) => {
         const card = await getCardByUid(Number(uid));
 
         if (!card) {
-            return res.sendStatus(404);
+            return res.status(404).send({ message: `Card does not exist` });
         }
 
         return res.status(200).json(card);
@@ -38,11 +39,10 @@ export const getCard = async (req: express.Request, res: express.Response) => {
 export const createCardController = async (req: express.Request, res: express.Response) => {
     try {
         const { uid, bal } = req.body;
-
-        if (!uid || !bal) {
+        const tapState = ''
+        if (!uid) {
             return res.sendStatus(400);
         }
-
 
         const existingCard = await getCardByUid(uid);
 
@@ -53,6 +53,7 @@ export const createCardController = async (req: express.Request, res: express.Re
         const newCard = await createCard({
             uid,
             bal,
+            tapState
         });
 
         return res.status(201).json(newCard);
@@ -93,6 +94,54 @@ export const updateCard = async (req: express.Request, res: express.Response) =>
         if (!card) {
             return res.sendStatus(404);
         }
+
+        return res.status(200).json(card);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+};
+
+export const tapIn = async (req: express.Request, res: express.Response) => {
+    try {
+        const { uid } = req.params;
+        const { tapState } = req.body;
+
+        const card = await getCardByUid(Number(uid));
+
+        if (!card) {
+            return res.status(404).send({ message: `Card does not exist` });
+        }
+
+        if (card.tapState.trim() !== '') {
+            return res.status(400).send({ message: 'No Exit' })
+        }
+
+        await CardModel.findOneAndUpdate({ uid }, { tapState })
+
+        return res.status(200).json(card);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+};
+
+export const tapOut = async (req: express.Request, res: express.Response) => {
+    try {
+        const { uid } = req.params;
+        const { tapState, bal } = req.body;
+
+        const card = await getCardByUid(Number(uid));
+
+        if (!card) {
+            return res.status(404).send({ message: `Card does not exist` });
+        }
+
+        if (card.tapState.trim() == '') {
+            return res.status(400).send({ message: 'No Entry!' })
+        }
+
+        await CardModel.findOneAndUpdate({ uid }, { tapState, bal })
 
         return res.status(200).json(card);
     } catch (error) {
