@@ -1,4 +1,6 @@
 import express from 'express';
+import { Graph } from 'graphlib';
+import * as graphlib from 'graphlib';
 import {
     getStations,
     getStationByName,
@@ -210,3 +212,132 @@ export const deleteStation = async (req: express.Request, res: express.Response)
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+
+// POLYLINES ////////////
+
+
+export const haversine = (
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number
+) => {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lng2 - lng1) * (Math.PI / 180);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in kilometers
+    return distance;
+};
+
+export const traveledDistance = (req: express.Request, res: express.Response) => {
+    const initialStation = req.body
+    const finalStation = req.body
+
+    try {
+        const graph = new graphlib.Graph({ directed: true });
+        getStations().then(stations => {
+            if (stations) {
+                // Add nodes (stations) to the graph
+                stations.forEach(station => {
+                    if (station.stationName) {
+                        graph.setNode(station.stationName);
+                    }
+                });
+
+                // Add edges (connections) to the graph
+                stations.forEach(station => {
+                    if (station.stationCoord) {
+                        station.stationCoord.forEach(connection => {
+                            if (station.stationName) {
+                                graph.setEdge(station.stationName, connection.toString());
+                            }
+                        });
+                    }
+                });
+                const promises = graph.edges().map((edge: { v: any; w: any; }) => {
+                    const sourceNode = edge.v;
+                    const targetNode = edge.w;
+                    const sourceStation = stations.find(station => station.stationName === sourceNode);
+                    const targetStation = stations.find(station => station.stationName === targetNode);
+                    if (sourceStation && targetStation && sourceStation.stationCoord && targetStation.stationCoord) {
+                        const dist = haversine(sourceStation.stationCoord[0], sourceStation.stationCoord[1], targetStation.stationCoord[0], targetStation.stationCoord[1]);
+                        // Set the weight for the edge
+                        graph.setEdge(sourceNode, targetNode, { distance: dist / 1000 });
+                    }
+                });
+                Promise.all(promises).then(() => {
+
+                    const sourceStation = graphlib.alg.dijkstra(graph, initialStation, (edge) => {
+                        return graph.edge(edge).distance;
+                    })
+                    const dist = sourceStation[finalStation].distance
+                    // console.log('Distance from',initialStation,'to',finalStation,'is',dist)
+                    // console.log(sourceStation)
+                    console.log('Distance is', dist)
+                    return res.status(200).json({ distance: dist })
+                }).catch(err => {
+                    console.error('Error setting edge distances:', err);
+                    return res.status(400).json({ message: err });
+                });
+            }
+        }).catch(err => {
+            console.error('Error fetching stations:', err);
+            return res.status(400).json({ message: err });
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({ message: error });
+    }
+};
+
+export const getRoute = async (req: express.Request, res: express.Response) => {
+    const initialStation = req.body
+    const finalStation = req.body
+    try {
+        const graph = new graphlib.Graph({ directed: true });
+        const stations = await getStations()
+        if (stations) {
+            stations.forEach(station => {
+                if (station.stationName) {
+                    graph.setNode(station.stationName);
+                }
+            });
+
+            // Add edges (connections) to the graph
+            stations.forEach(station => {
+                if (station.stationConn) {
+                    station.stationConn.forEach(connection => {
+                        if (station.stationName) {
+                            graph.setEdge(station.stationName, connection);
+                        }
+                    });
+                }
+            });
+        }
+        const path = graphlib.alg.dijkstra(graph, initialStation);
+        // console.log(inStation, outStation)
+        const nodesTraversed = [];
+        let currentNode = finalStation;
+        while (currentNode !== initialStation) {
+            nodesTraversed.unshift(currentNode);
+            currentNode = path[currentNode].predecessor;
+            if (!currentNode) {
+                // If no path exists between inStation and outStation
+                return res.status(400).json({ message: 'No path exists between the given stations.' });
+            }
+        }
+        nodesTraversed.unshift(initialStation); // Add the starting node
+        return res.status(200).json(nodesTraversed);
+    } catch (error) {
+        console.log(error)
+        return res.status(400).json({ message: error });
+    }
+}
