@@ -3,11 +3,6 @@ import { Graph } from 'graphlib';
 import * as graphlib from 'graphlib';
 import {
     getStations,
-    getStationByName,
-    createStation,
-    deleteStationByName,
-    updateStationById,
-    addStationConnsByName,
     StationModel,
 } from '../db/stations';
 
@@ -51,10 +46,9 @@ export const createAStation = async (req: express.Request, res: express.Response
             return res.sendStatus(400);
         }
 
-
-        const existingStation = await getStationByName(stationName || stationCoord);
+        const existingStation = await StationModel.findOne({ stationName: stationName });
         if (existingStation) {
-            return res.status(400).send({ message: `Already Exist` });
+            return res.status(400).send({ message: `Station with name ${stationName} already exists` });
         }
 
         //check if connections exist
@@ -65,21 +59,20 @@ export const createAStation = async (req: express.Request, res: express.Response
             }
         }
 
-        //create connection on connections
-        for (let i = 0; i < stationConn.length; i++) {
-            const UpdateConnection = await StationModel.findOneAndUpdate(
-                { stationName: stationConn[i] },
-                { $push: { stationConn: stationName } },
-                { new: true }
-            )
-        }
-
-        // create the station
-        const stationNew = await createStation({
+        // Create the station
+        const newStation = await StationModel.create({
             stationName: stationName,
             stationCoord: stationCoord,
             stationConn: stationConn
-        })
+        });
+
+        // Update connections
+        for (let i = 0; i < stationConn.length; i++) {
+            await StationModel.findOneAndUpdate(
+                { stationName: stationConn[i] },
+                { $push: { stationConn: stationName } }
+            );
+        }
 
         return res.status(200).send({ message: "Station created successfully!" })
 
@@ -240,8 +233,11 @@ export const haversine = (
 };
 
 export const traveledDistance = async (req: express.Request, res: express.Response) => {
-    const initialStation = req.body.initialStation;
-    const finalStation = req.body.finalStation;
+    const initialStation = req.query.initialStation as string;
+    const finalStation = req.query.finalStation as string;
+    // if (!initialStation || !finalStation) {
+    //     return res.status(400).json({ message: "Initial and final stations are required" });
+    // }
 
     try {
         const stations = await getStations(); // Fetch stations asynchronously
