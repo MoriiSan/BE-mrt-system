@@ -1,5 +1,4 @@
 import express from 'express';
-import { Graph } from 'graphlib';
 import * as graphlib from 'graphlib';
 import {
     getStations,
@@ -232,64 +231,6 @@ export const haversine = (
     return distance;
 };
 
-export const traveledDistance = async (req: express.Request, res: express.Response) => {
-    const initialStation = req.query.initialStation as string;
-    const finalStation = req.query.finalStation as string;
-    // if (!initialStation || !finalStation) {
-    //     return res.status(400).json({ message: "Initial and final stations are required" });
-    // }
-
-    try {
-        const stations = await getStations(); // Fetch stations asynchronously
-        if (!stations || stations.length === 0) {
-            return res.status(400).json({ message: "Stations not found" });
-        }
-
-        const graph = new graphlib.Graph({ directed: true });
-
-        // Add nodes (stations) to the graph
-        stations.forEach(station => {
-            if (station.stationName) {
-                graph.setNode(station.stationName);
-            }
-        });
-
-        // Add edges (connections) to the graph
-        stations.forEach(station => {
-            if (station.stationName && station.stationCoord) {
-                station.stationCoord.forEach(connection => {
-                    graph.setEdge(station.stationName, connection.toString());
-                });
-            }
-        });
-
-        // Calculate distances and set as edge weights
-        graph.edges().forEach((edge: { v: any; w: any; }) => {
-            const sourceNode = edge.v;
-            const targetNode = edge.w;
-            const sourceStation = stations.find(station => station.stationName === sourceNode);
-            const targetStation = stations.find(station => station.stationName === targetNode);
-            if (sourceStation && targetStation && sourceStation.stationCoord && targetStation.stationCoord) {
-                const dist = haversine(sourceStation.stationCoord[0], sourceStation.stationCoord[1], targetStation.stationCoord[0], targetStation.stationCoord[1]);
-                graph.setEdge(sourceNode, targetNode, { distance: dist / 1000 });
-            }
-        });
-
-        // Use Dijkstra's algorithm to find shortest path
-        const shortestPath = graphlib.alg.dijkstra(graph, initialStation, (edge) => {
-            return graph.edge(edge).distance;
-        });
-
-        const dist = shortestPath[finalStation].distance;
-        console.log('Distance is', dist);
-        return res.status(200).json({ distance: dist });
-
-    } catch (error) {
-        console.error('Error:', error);
-        return res.status(500).json({ message: "Internal Server Error" });
-    }
-};
-
 export const getRoute = async (req: express.Request, res: express.Response) => {
     const initialStation = req.body.initialStation;
     const finalStation = req.body.finalStation;
@@ -327,10 +268,81 @@ export const getRoute = async (req: express.Request, res: express.Response) => {
             }
         }
         nodesTraversed.unshift(initialStation); // Add the starting node
-        nodesTraversed.push(finalStation); // Add the final node
         return res.status(200).json(nodesTraversed);
     } catch (error) {
         console.log(error)
         return res.status(400).json({ message: error });
     }
 }
+
+export const traveledDistance = (req: express.Request, res: express.Response) => {
+    const initialStation = req.body.initialStation
+    const finalStation = req.body.finalStation
+    // console.log('received', initialStation, finalStation)
+    try {
+        const graph = new graphlib.Graph({ directed: true });
+        getStations().then(stations => {
+            if (stations) {
+                // Add nodes (stations) to the graph
+                stations.forEach(station => {
+                    if (station.stationName) {
+                        graph.setNode(station.stationName);
+                    }
+                });
+ 
+                // Add edges (connections) to the graph
+                stations.forEach(station => {
+                    if (station.stationConn) {
+                        station.stationConn.forEach(connection => {
+                            if (station.stationName) {
+                                graph.setEdge(station.stationName, connection);
+                            }
+                        });
+                    }
+                });
+ 
+                const promises = graph.edges().map(edge => {
+                    const sourceNode = edge.v;
+                    const targetNode = edge.w;
+                    return StationModel.findOne({ stationName: sourceNode }).then(ref1 => {
+                        return StationModel.findOne({ stationName: targetNode }).then(ref2 => {
+                            if (ref1 && ref2 && ref1.stationCoord && ref2.stationCoord) {
+                                const dist = haversine(ref1.stationCoord[0], ref1.stationCoord[1], ref2.stationCoord[0], ref2.stationCoord[1]);
+                                // Set the weight for the edge
+                                graph.setEdge(sourceNode, targetNode, { distance: dist });
+                                // console.log('between',ref1.stationName,ref2.stationName,dist)
+                            }
+                        });
+                    });
+                });
+ 
+                Promise.all(promises).then(() => {
+                    // console.log(graph.edges().length);
+ 
+                    //ADD STUFF HERE DUMMY
+                    // console.log('Edge:', graph.edges());
+                    // console.log('sending', graph)
+                    // console.log("Got Distance")
+                    const sourceStation = graphlib.alg.dijkstra(graph, initialStation, (edge) => {
+                        return graph.edge(edge).distance;
+                    })
+                    // console.log('source is',sourceStation['Ayala Station'].distance)
+                    const dist = sourceStation[finalStation].distance
+                    // console.log('Distance from',startStation,'to',endStation,'is',dist)
+                    // console.log(sourceStation)
+                    // console.log('Distance is', dist)
+                    return res.status(200).json({ distance: dist })
+                }).catch(err => {
+                    console.error('Error setting edge distances:', err);
+                    return res.status(400).json({ message: err });
+                });
+            }
+        }).catch(err => {
+            console.error('Error fetching stations:', err);
+            return res.status(400).json({ message: err });
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({ message: error });
+    }
+};
