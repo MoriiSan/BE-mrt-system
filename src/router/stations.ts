@@ -16,6 +16,6 @@ export default (router: express.Router) => {
     router.post('/stations/create-station', createAStation);
     router.patch('/stations/update-station/:_id', updateStation);
     router.delete('/stations/delete-station/:stationName', deleteStation);    
-    router.get(`/stations/traveled-distance`, traveledDistance);
+    router.get('/stations/traveled-distance', traveledDistance);
     router.get(`/stations/get-route`, getRoute);
 };
