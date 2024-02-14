@@ -7,6 +7,7 @@ import {
 export const getMrtFare = async (req: express.Request, res: express.Response) => {
     try {
         const adminConfigs = await getFare();
+        console.log(adminConfigs)
 
         return res.status(200).send(adminConfigs);
     } catch (error) {
