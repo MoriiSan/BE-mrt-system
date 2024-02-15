@@ -7,6 +7,5 @@ import {
 
 export default (router: express.Router) => {
     router.get('/adminConfigs/:fareId', getMrtFare);
-    // router.patch('/adminConfigs/:fare', updateMrtFare);
     router.patch('/adminConfigs/:fareId', updateMrtFare)
 };

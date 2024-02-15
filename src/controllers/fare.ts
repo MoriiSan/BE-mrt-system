@@ -1,15 +1,19 @@
 import express from 'express';
 import {
+    FareModel,
     getFare,
     updateFare
 } from '../db/fare';
 
 export const getMrtFare = async (req: express.Request, res: express.Response) => {
+    const { fareId } = req.params;
+    if (!fareId) {
+        return res.sendStatus(400);
+    }
     try {
-        const adminConfigs = await getFare();
-        console.log(adminConfigs)
+        const getFare = await FareModel.findOne();
 
-        return res.status(200).send(adminConfigs);
+        return res.status(200).send(getFare);
     } catch (error) {
         console.log(error);
         return res.sendStatus(400);

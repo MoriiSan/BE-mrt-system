@@ -4,6 +4,7 @@ import {
     getStations,
     StationModel,
 } from '../db/stations';
+import { FareModel } from '../db/fare';
 
 export const getAllStations = async (req: express.Request, res: express.Response) => {
     try {
@@ -275,11 +276,13 @@ export const getRoute = async (req: express.Request, res: express.Response) => {
     }
 }
 
-export const traveledDistance = (req: express.Request, res: express.Response) => {
+export const traveledDistance = async (req: express.Request, res: express.Response) => {
     const initialStation = req.body.initialStation
     const finalStation = req.body.finalStation
-    // console.log('received', initialStation, finalStation)
     try {
+        const getFare = await FareModel.findOne({ fareId: 1 });
+        console.log(getFare.fareKm)
+
         const graph = new graphlib.Graph({ directed: true });
         getStations().then(stations => {
             if (stations) {
@@ -289,7 +292,7 @@ export const traveledDistance = (req: express.Request, res: express.Response) =>
                         graph.setNode(station.stationName);
                     }
                 });
- 
+
                 // Add edges (connections) to the graph
                 stations.forEach(station => {
                     if (station.stationConn) {
@@ -300,7 +303,7 @@ export const traveledDistance = (req: express.Request, res: express.Response) =>
                         });
                     }
                 });
- 
+
                 const promises = graph.edges().map(edge => {
                     const sourceNode = edge.v;
                     const targetNode = edge.w;
@@ -315,23 +318,19 @@ export const traveledDistance = (req: express.Request, res: express.Response) =>
                         });
                     });
                 });
- 
+
                 Promise.all(promises).then(() => {
-                    // console.log(graph.edges().length);
- 
-                    //ADD STUFF HERE DUMMY
-                    // console.log('Edge:', graph.edges());
-                    // console.log('sending', graph)
-                    // console.log("Got Distance")
                     const sourceStation = graphlib.alg.dijkstra(graph, initialStation, (edge) => {
                         return graph.edge(edge).distance;
                     })
                     // console.log('source is',sourceStation['Ayala Station'].distance)
                     const dist = sourceStation[finalStation].distance
-                    // console.log('Distance from',startStation,'to',endStation,'is',dist)
-                    // console.log(sourceStation)
-                    // console.log('Distance is', dist)
-                    return res.status(200).json({ distance: dist })
+                    const fare = getFare.fareKm;
+
+                    // Multiply fare and distance
+                    const totalFare = fare * dist;
+                    
+                    return res.status(200).json({ distance: dist, fare: fare, totalFare: totalFare })
                 }).catch(err => {
                     console.error('Error setting edge distances:', err);
                     return res.status(400).json({ message: err });
