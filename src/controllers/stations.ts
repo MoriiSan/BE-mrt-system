@@ -281,7 +281,6 @@ export const traveledDistance = async (req: express.Request, res: express.Respon
     const finalStation = req.body.finalStation
     try {
         const getFare = await FareModel.findOne({ fareId: 1 });
-        console.log(getFare.fareKm)
 
         const graph = new graphlib.Graph({ directed: true });
         getStations().then(stations => {
