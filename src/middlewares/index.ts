@@ -81,7 +81,8 @@ export const isMaintenance = async (req: express.Request, res: express.Response,
 export const isOperational = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
         const config = await FareModel.findOne({ fareId: 1 });
-        if (!config.isOperational) {
+        console.log(config.isMaintenance)
+        if (config.isMaintenance) {
             return res.status(400).json({ message: 'System is in maintenance mode. Please try again later.' });
         }
 

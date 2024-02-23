@@ -44,14 +44,26 @@ export const toggleMaintenance = async (req: express.Request, res: express.Respo
 
         if (config.isMaintenance) {
             // If currently in maintenance mode, switch to operational mode
-            await FareModel.updateOne({ fareId: 1 }, { $set: { isMaintenance: false, isOperational: true } });
+            await FareModel.updateOne({ fareId: 1 }, { $set: { isMaintenance: false } });
             return res.status(200).json({ message: 'Switched to operational mode' });
         } else {
             // If currently in operational mode, switch to maintenance mode
-            await FareModel.updateOne({ fareId: 1 }, { $set: { isMaintenance: true, isOperational: false } });
+            await FareModel.updateOne({ fareId: 1 }, { $set: { isMaintenance: true } });
             return res.status(200).json({ message: 'Switched to maintenance mode' });
         }
   
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+export const getMode = async (req: express.Request, res: express.Response) => {
+    try {
+        const mode = await FareModel.findOne({ fareId: 1 });
+        // console.log(mode.isMaintenance)
+        
+        return res.status(200).json(mode.isMaintenance); 
     } catch (error) {
         console.log(error);
         return res.status(500).json({ error: 'Internal Server Error' });

@@ -7,6 +7,7 @@ import {
     updateCardByUid,
     CardModel,
 } from '../db/cards';
+import { FareModel } from '../db/fare';
 
 export const getAllCards = async (req: express.Request, res: express.Response) => {
     try {
@@ -108,6 +109,7 @@ export const tapIn = async (req: express.Request, res: express.Response) => {
         const { tapState } = req.body;
 
         const card = await getCardByUid(Number(uid));
+        const fare = await FareModel.findOne({ fareId: 1 })
 
         if (!card) {
             return res.status(404).send({ message: `Card does not exist` });
@@ -115,6 +117,9 @@ export const tapIn = async (req: express.Request, res: express.Response) => {
 
         if (card.tapState.trim() !== '') {
             return res.status(400).send({ message: 'No Exit' })
+        }
+        if (card.bal <= 0 || card.bal < fare.fareKm) {
+            return res.status(400).send({ message: 'Insufficient balance' });
         }
 
         await CardModel.findOneAndUpdate({ uid }, { tapState })
