@@ -5,6 +5,8 @@ const COLLECTION_NAME = 'adminConfigs';
 const FareSchema = new mongoose.Schema({
     fareId: { type: Number},
     fareKm: { type: Number, required: true },
+    isMaintenance: {type: Boolean},
+    isOperational: {type: Boolean}
 }, { collection: COLLECTION_NAME });
 
 export const FareModel = mongoose.model('Fare', FareSchema, COLLECTION_NAME);

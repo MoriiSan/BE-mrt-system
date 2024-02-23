@@ -3,9 +3,13 @@ import express from 'express';
 import {
     getMrtFare,
     updateMrtFare,
-} from '../controllers/fare';
+    toggleMaintenance
+} from '../controllers/adminConfig';
+import { isMaintenance } from '../middlewares';
+
 
 export default (router: express.Router) => {
-    router.get('/adminConfigs/:fareId', getMrtFare);
-    router.patch('/adminConfigs/:fareId', updateMrtFare)
+    router.get('/adminConfigs/fare', getMrtFare);
+    router.patch('/adminConfigs/:fareId',isMaintenance, updateMrtFare)
+    router.patch('/adminConfigs/maintenance/toggle', toggleMaintenance)
 };

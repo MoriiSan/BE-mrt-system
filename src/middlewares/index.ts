@@ -3,13 +3,15 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import { get, merge } from 'lodash';
 
 import { getUserBySessionToken } from '../db/users';
+import { getCards } from '../db/cards';
+import { FareModel } from '../db/fare';
 
 export const isOwner = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
         const { id } = req.params;
         const currentUserId = get(req, 'identity._id') as string;
 
-        if(!currentUserId) {
+        if (!currentUserId) {
             return res.sendStatus(403);
         }
 
@@ -28,7 +30,7 @@ export const isAuthenticated = async (req: express.Request, res: express.Respons
     try {
         const token = req.headers['authorization'];
 
-        if (!token){
+        if (!token) {
             return res.sendStatus(403);
         }
 
@@ -44,7 +46,7 @@ export const isAuthenticated = async (req: express.Request, res: express.Respons
             return res.sendStatus(403);
         }
 
-        merge(req, {identity: existingUser});
+        merge(req, { identity: existingUser });
 
         next();
     } catch (error) {
@@ -55,3 +57,37 @@ export const isAuthenticated = async (req: express.Request, res: express.Respons
         return res.sendStatus(400);
     }
 };
+
+export const isMaintenance = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        const card = await getCards();
+        const tapState = card.some(card => !!card.tapState);
+        if (tapState) {
+            return res.status(400).json({ message: 'Maintenance not allowed while may tao.' });
+        }
+
+        const config = await FareModel.findOne({ fareId: 1 });
+        if (!config.isMaintenance) {
+            return res.status(400).json({ message: 'System is in operational mode. Please try again later.' });
+        }
+
+        next();
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+export const isOperational = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        const config = await FareModel.findOne({ fareId: 1 });
+        if (!config.isOperational) {
+            return res.status(400).json({ message: 'System is in maintenance mode. Please try again later.' });
+        }
+
+        next();
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
