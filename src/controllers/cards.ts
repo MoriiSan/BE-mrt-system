@@ -41,6 +41,7 @@ export const createCardController = async (req: express.Request, res: express.Re
     try {
         const { uid, bal } = req.body;
         const tapState = ''
+        const user = ''
         if (!uid) {
             return res.sendStatus(400);
         }
@@ -54,7 +55,8 @@ export const createCardController = async (req: express.Request, res: express.Re
         const newCard = await createCard({
             uid,
             bal,
-            tapState
+            tapState,
+            user
         });
 
         return res.status(201).json(newCard);
@@ -147,6 +149,30 @@ export const tapOut = async (req: express.Request, res: express.Response) => {
         }
 
         await CardModel.findOneAndUpdate({ uid }, { tapState, bal })
+
+        return res.status(200).json(card);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+};
+
+export const linkCard = async (req: express.Request, res: express.Response) => {
+    try {
+        const { uid } = req.params;
+        const { user } = req.body;
+
+        const card = await getCardByUid(Number(uid));
+
+        if (!card) {
+            return res.status(404).send({ message: `Card does not exist` });
+        }
+
+        if (card.user.trim() !== '') {
+            return res.status(400).send({ message: 'Card already linked to a user' });
+        } 
+
+        await CardModel.findOneAndUpdate({ uid }, { user })
 
         return res.status(200).json(card);
     } catch (error) {
