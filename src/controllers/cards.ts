@@ -198,7 +198,7 @@ export const getLinkedCards = async (req: express.Request, res: express.Response
     try {
         const { devId } = req.params;
 
-        const card = await CardModel.findOne({ devId });
+        const card = await CardModel.find({ devId });
         console.log(card)
 
         if (!card) {
