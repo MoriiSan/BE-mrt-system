@@ -92,17 +92,25 @@ export const deleteCard = async (req: express.Request, res: express.Response) =>
 export const updateCard = async (req: express.Request, res: express.Response) => {
     try {
         const { uid } = req.params;
-        const { bal } = req.body;
+        const { bal, charge, dateTravel } = req.body;
 
         if (!bal) {
             return res.sendStatus(400);
         }
-
-        const card = await updateCardByUid(Number(uid), { bal });
+        const card = await CardModel.findOneAndUpdate({ uid: uid }, { bal: bal }, {new: true})
 
         if (!card) {
             return res.sendStatus(404);
         }
+
+        const loggerMan = {
+            charge: charge,
+            dateTravel: dateTravel
+        }
+
+        card.logs.push(loggerMan)
+
+        card.save()
 
         return res.status(200).json(card);
     } catch (error) {
@@ -144,7 +152,7 @@ export const tapOut = async (req: express.Request, res: express.Response) => {
         const { uid } = req.params;
         const { tapState, bal } = req.body;
 
-        const card = await getCardByUid(Number(uid));
+        const card = await CardModel.findOne({ uid });
 
         if (!card) {
             return res.status(404).send({ message: `Card does not exist` });
