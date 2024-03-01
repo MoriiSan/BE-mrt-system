@@ -1,6 +1,11 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const COLLECTION_NAME = 'cards';
+
+const Logs = new Schema ({
+    charge: String,
+    dateTravel: String
+})
 
 const CardSchema = new mongoose.Schema({
     uid: { type: Number, required: true },
@@ -8,7 +13,7 @@ const CardSchema = new mongoose.Schema({
     tapState: { type: String },
     user: { type: String },
     devId: { type: String },
-    logs: [{ type: String }],
+    logs: { type: [Logs] },
 }, { collection: COLLECTION_NAME });
 
 export const CardModel = mongoose.model('Card', CardSchema, COLLECTION_NAME);

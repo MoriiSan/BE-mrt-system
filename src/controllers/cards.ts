@@ -8,6 +8,7 @@ import {
     CardModel,
 } from '../db/cards';
 import { FareModel } from '../db/fare';
+import { random } from 'lodash';
 
 export const getAllCards = async (req: express.Request, res: express.Response) => {
     try {
@@ -43,7 +44,8 @@ export const createCardController = async (req: express.Request, res: express.Re
         const tapState = '';
         const user = '';
         const devId = '';
-        const logs = [''];
+        const logs: any[] = [];
+
         if (!uid) {
             return res.sendStatus(400);
         }
@@ -203,28 +205,27 @@ export const getLinkedCards = async (req: express.Request, res: express.Response
 export const updateLogs = async (req: express.Request, res: express.Response) => {
     try {
         const { uid } = req.params;
-        const logsArray = req.body;
+        const { charge, dateTravel } = req.body;
 
-        if (!Array.isArray(logsArray) || logsArray.length === 0) {
-            return res.status(400).send("Logs must be provided as a non-empty array.");
-        }
-
-        const card = await getCardByUid(Number(uid));
+        const card = await CardModel.findOne({ uid });
 
         if (!card) {
-            return res.sendStatus(404);
+            return res.status(404).send({ message: `Card does not exist` });
         }
 
-        const updatedLogs = [...card.logs, ...logsArray];
+        const loggerMan = {
+            charge: charge,
+            dateTravel: dateTravel
+        }
 
-        await CardModel.findOneAndUpdate({ uid }, { logs: updatedLogs });
+        card.logs.push(loggerMan)
 
-        // Retrieve the updated card after the update operation
-        const updatedCard = await getCardByUid(Number(uid));
+        card.save()
 
-        return res.status(200).json(updatedCard);
+        return res.status(200).json(card);
     } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
+        console.error(error);
+        return res.sendStatus(500);
     }
 };
+
