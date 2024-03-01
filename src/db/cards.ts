@@ -11,7 +11,6 @@ const CardSchema = new mongoose.Schema({
     uid: { type: Number, required: true },
     bal: { type: Number, required: true },
     tapState: { type: String },
-    user: { type: String },
     devId: { type: String },
     logs: { type: [Logs] },
 }, { collection: COLLECTION_NAME });

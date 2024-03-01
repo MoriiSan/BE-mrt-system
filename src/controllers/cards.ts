@@ -42,7 +42,6 @@ export const createCardController = async (req: express.Request, res: express.Re
     try {
         const { uid, bal } = req.body;
         const tapState = '';
-        const user = '';
         const devId = '';
         const logs: any[] = [];
 
@@ -60,7 +59,6 @@ export const createCardController = async (req: express.Request, res: express.Re
             uid,
             bal,
             tapState,
-            user,
             devId,
             logs,
         });
@@ -97,7 +95,7 @@ export const updateCard = async (req: express.Request, res: express.Response) =>
         if (!bal) {
             return res.sendStatus(400);
         }
-        const card = await CardModel.findOneAndUpdate({ uid: uid }, { bal: bal }, {new: true})
+        const card = await CardModel.findOneAndUpdate({ uid: uid }, { bal: bal }, { new: true })
 
         if (!card) {
             return res.sendStatus(404);
@@ -174,7 +172,7 @@ export const tapOut = async (req: express.Request, res: express.Response) => {
 export const linkCard = async (req: express.Request, res: express.Response) => {
     try {
         const { uid } = req.params;
-        const { user } = req.body;
+        const { devId } = req.body;
 
         const card = await getCardByUid(Number(uid));
 
@@ -182,11 +180,11 @@ export const linkCard = async (req: express.Request, res: express.Response) => {
             return res.status(404).send({ message: `Card does not exist` });
         }
 
-        if (card.user.trim() !== '') {
+        if (card.devId.trim() !== '') {
             return res.status(400).send({ message: 'Card already linked to a user' });
         }
 
-        await CardModel.findOneAndUpdate({ uid }, { user })
+        await CardModel.findOneAndUpdate({ uid }, { devId: devId }, { new: true })
 
         return res.status(200).json(card);
     } catch (error) {
@@ -198,12 +196,16 @@ export const linkCard = async (req: express.Request, res: express.Response) => {
 
 export const getLinkedCards = async (req: express.Request, res: express.Response) => {
     try {
-        const devId = req.params.devId;
+        const { devId } = req.params;
 
-        const LinkedCards = await CardModel.find({ devId });
-        console.log(LinkedCards)
+        const card = await CardModel.findOne({ devId });
+        console.log(card)
 
-        return res.status(200).json(LinkedCards);
+        if (!card) {
+            return res.status(404).send({ message: `Card does not exist` });
+        }
+
+        return res.status(200).json(card);
     } catch (error) {
         console.log(error);
         return res.sendStatus(400);
