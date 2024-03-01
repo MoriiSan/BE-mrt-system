@@ -43,6 +43,7 @@ export const createCardController = async (req: express.Request, res: express.Re
         const tapState = '';
         const user = '';
         const devId = '';
+        const logs = [''];
         if (!uid) {
             return res.sendStatus(400);
         }
@@ -59,6 +60,7 @@ export const createCardController = async (req: express.Request, res: express.Re
             tapState,
             user,
             devId,
+            logs,
         });
 
         return res.status(201).json(newCard);
@@ -192,6 +194,35 @@ export const getLinkedCards = async (req: express.Request, res: express.Response
         console.log(LinkedCards)
 
         return res.status(200).json(LinkedCards);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+};
+
+export const updateLogs = async (req: express.Request, res: express.Response) => {
+    try {
+        const { uid } = req.params;
+        const logsArray = req.body;
+
+        if (!Array.isArray(logsArray) || logsArray.length === 0) {
+            return res.status(400).send("Logs must be provided as a non-empty array.");
+        }
+
+        const card = await getCardByUid(Number(uid));
+
+        if (!card) {
+            return res.sendStatus(404);
+        }
+
+        const updatedLogs = [...card.logs, ...logsArray];
+
+        await CardModel.findOneAndUpdate({ uid }, { logs: updatedLogs });
+
+        // Retrieve the updated card after the update operation
+        const updatedCard = await getCardByUid(Number(uid));
+
+        return res.status(200).json(updatedCard);
     } catch (error) {
         console.log(error);
         return res.sendStatus(400);
