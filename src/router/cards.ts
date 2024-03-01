@@ -8,7 +8,8 @@ import {
     updateCard,
     tapIn,
     tapOut,
-    linkCard
+    linkCard,
+    getLinkedCards
 } from '../controllers/cards';
 import { isMaintenance, isOperational } from '../middlewares';
 
@@ -17,6 +18,7 @@ import { isMaintenance, isOperational } from '../middlewares';
 export default (router: express.Router) => {
     router.get('/cards', getAllCards);
     router.get('/cards/:uid', getCard);
+    router.get('/cards/linkedCards/:devId',getLinkedCards)
     router.patch('/cards/linkCard/:uid', linkCard);
 
     router.post('/cards/creating-card', createCardController);

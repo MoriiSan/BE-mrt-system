@@ -6,7 +6,8 @@ const CardSchema = new mongoose.Schema({
     uid: { type: Number, required: true },
     bal: { type: Number, required: true },
     tapState: { type: String },
-    user: { type: String }
+    user: { type: String },
+    devId: {type: String},
 }, { collection: COLLECTION_NAME });
 
 export const CardModel = mongoose.model('Card', CardSchema, COLLECTION_NAME);

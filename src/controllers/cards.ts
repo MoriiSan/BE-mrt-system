@@ -40,8 +40,9 @@ export const getCard = async (req: express.Request, res: express.Response) => {
 export const createCardController = async (req: express.Request, res: express.Response) => {
     try {
         const { uid, bal } = req.body;
-        const tapState = ''
-        const user = ''
+        const tapState = '';
+        const user = '';
+        const devId = '';
         if (!uid) {
             return res.sendStatus(400);
         }
@@ -56,7 +57,8 @@ export const createCardController = async (req: express.Request, res: express.Re
             uid,
             bal,
             tapState,
-            user
+            user,
+            devId,
         });
 
         return res.status(201).json(newCard);
@@ -170,11 +172,26 @@ export const linkCard = async (req: express.Request, res: express.Response) => {
 
         if (card.user.trim() !== '') {
             return res.status(400).send({ message: 'Card already linked to a user' });
-        } 
+        }
 
         await CardModel.findOneAndUpdate({ uid }, { user })
 
         return res.status(200).json(card);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+};
+
+
+export const getLinkedCards = async (req: express.Request, res: express.Response) => {
+    try {
+        const devId = req.params.devId;
+
+        const LinkedCards = await CardModel.find({ devId });
+        console.log(LinkedCards)
+
+        return res.status(200).json(LinkedCards);
     } catch (error) {
         console.log(error);
         return res.sendStatus(400);
