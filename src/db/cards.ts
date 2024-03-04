@@ -4,7 +4,9 @@ const COLLECTION_NAME = 'cards';
 
 const Logs = new Schema ({
     charge: String,
-    dateTravel: String
+    dateTravel: String,
+    topUp: String,
+    dateLoaded: String,
 })
 
 const CardSchema = new mongoose.Schema({

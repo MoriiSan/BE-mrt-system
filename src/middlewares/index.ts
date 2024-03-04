@@ -28,17 +28,19 @@ export const isOwner = async (req: express.Request, res: express.Response, next:
 
 export const isAuthenticated = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        const token = req.headers['authorization'];
-
+        const token = req.body['authorization'];
+        console.log('received token', token)
         if (!token) {
-            return res.sendStatus(403);
+            return res.status(403).send({ message: `Invalid token` });
         }
 
-        const decoded = jwt.verify(token, 'secretKey') as JwtPayload;
+        const decoded = jwt.verify(token, 'a1s2d3f4g5h6j7k8l90') as JwtPayload;
 
         const currentTimestamp = Math.floor(Date.now() / 1000);
+        // const expirationTime = currentTimestamp + 3600; // 3600 seconds = 1 hour
+
         if (decoded.exp && currentTimestamp > decoded.exp) {
-            return res.sendStatus(401).json('Token has expired');
+            return res.status(401).send({ message: `Token has expired` });
         }
 
         const existingUser = await getUserBySessionToken(token);

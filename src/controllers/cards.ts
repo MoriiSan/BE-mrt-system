@@ -52,7 +52,7 @@ export const createCardController = async (req: express.Request, res: express.Re
         const existingCard = await getCardByUid(uid);
 
         if (existingCard) {
-            return res.sendStatus(400);
+            return res.status(404).send({ message: `Card is already existing` });
         }
 
         const newCard = await createCard({
@@ -77,7 +77,7 @@ export const deleteCard = async (req: express.Request, res: express.Response) =>
         const deletedCard = await deleteCardByUid(Number(uid));
 
         if (!deletedCard) {
-            return res.sendStatus(404);
+            return res.status(404).send({ message: `Card does not exist` });
         }
 
         return res.json(deletedCard);
@@ -90,20 +90,20 @@ export const deleteCard = async (req: express.Request, res: express.Response) =>
 export const updateCard = async (req: express.Request, res: express.Response) => {
     try {
         const { uid } = req.params;
-        const { bal, charge, dateTravel } = req.body;
+        const { bal, topUp, dateLoaded } = req.body;
 
         if (!bal) {
-            return res.sendStatus(400);
+            return res.status(400).send({ message: `Empty balance` });
         }
         const card = await CardModel.findOneAndUpdate({ uid: uid }, { bal: bal }, { new: true })
 
         if (!card) {
-            return res.sendStatus(404);
+            return res.status(404).send({ message: `Card does not exist` });
         }
 
         const loggerMan = {
-            charge: charge,
-            dateTravel: dateTravel
+            topUp: topUp,
+            dateLoaded: dateLoaded
         }
 
         card.logs.push(loggerMan)
@@ -215,9 +215,12 @@ export const getLinkedCards = async (req: express.Request, res: express.Response
 export const updateLogs = async (req: express.Request, res: express.Response) => {
     try {
         const { uid } = req.params;
-        const { charge, dateTravel } = req.body;
+        const { bal, charge, dateTravel } = req.body;
 
-        const card = await CardModel.findOne({ uid });
+        if (!bal) {
+            return res.status(400).send({ message: `Empty balance` });
+        }
+        const card = await CardModel.findOneAndUpdate({ uid: uid }, { bal: bal }, { new: true })
 
         if (!card) {
             return res.status(404).send({ message: `Card does not exist` });
@@ -234,8 +237,8 @@ export const updateLogs = async (req: express.Request, res: express.Response) =>
 
         return res.status(200).json(card);
     } catch (error) {
-        console.error(error);
-        return res.sendStatus(500);
+        console.log(error);
+        return res.sendStatus(400);
     }
 };
 

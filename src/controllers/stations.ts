@@ -88,13 +88,15 @@ export const updateStation = async (req: express.Request, res: express.Response)
         const { stationName, stationCoord, stationConn } = req.body;
 
         if (!stationCoord || !stationConn || !stationName) {
-            return res.sendStatus(400);
+            return res.status(400).send({ message: `Station is not existing` });
+
         }
 
         const station = await StationModel.findById({ _id: id });
 
         if (!station) {
-            return res.sendStatus(404);
+            return res.status(404).send({ message: `No station found` });
+
         }
 
         const reference = await StationModel.findById({ _id: id })
@@ -328,7 +330,7 @@ export const traveledDistance = async (req: express.Request, res: express.Respon
 
                     // Multiply fare and distance
                     const totalFare = fare * dist;
-                    
+
                     return res.status(200).json({ distance: dist, fare: fare, totalFare: totalFare })
                 }).catch(err => {
                     console.error('Error setting edge distances:', err);
