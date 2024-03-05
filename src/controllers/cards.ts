@@ -212,6 +212,28 @@ export const getLinkedCards = async (req: express.Request, res: express.Response
     }
 };
 
+export const removeLinkedCard = async (req: express.Request, res: express.Response) => {
+    try {
+        const { uid } = req.params;
+        const { devId } = req.body;
+
+        const card = await CardModel.findOne({ uid: uid });
+
+        if (!card) {
+            return res.status(404).send({ message: `Card does not exist` });
+        }
+
+        // await CardModel.findOneAndUpdate({ uid }, { devId: devId })
+        card.devId = ""; 
+        await card.save();
+
+        return res.status(200).json(card);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+};
+
 export const updateLogs = async (req: express.Request, res: express.Response) => {
     try {
         const { uid } = req.params;
