@@ -12,6 +12,7 @@ import {
     getLinkedCards,
     removeLinkedCard,
     updateLogs,
+    removeAllCards,
 } from '../controllers/cards';
 import { isMaintenance, isOperational, isAuthenticated } from '../middlewares';
 
@@ -30,5 +31,6 @@ export default (router: express.Router) => {
     router.get('/cards/linkedCards/:devId', getLinkedCards)
     router.patch('/cards/linkCard/:uid', linkCard);
     router.patch('/cards/remove-card/:uid', removeLinkedCard)
+    router.patch('/cards/remove-all-cards/:devId', removeAllCards)
 
 };
