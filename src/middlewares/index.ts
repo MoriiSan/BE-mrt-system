@@ -28,16 +28,15 @@ export const isOwner = async (req: express.Request, res: express.Response, next:
 
 export const isAuthenticated = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        const token = req.body['authorization'];
-        console.log('received token', token)
+        const token = req.headers['authorization'];
+        // console.log('received token', token)
         if (!token) {
-            return res.status(403).send({ message: `Invalid token` });
+            return res.status(403).send({ message: `Invalid token. Log in again.` });
         }
 
-        const decoded = jwt.verify(token, 'a1s2d3f4g5h6j7k8l90') as JwtPayload;
+        const decoded = jwt.verify(token, process.env.SECRET_KEY) as JwtPayload;
 
-        const currentTimestamp = Math.floor(Date.now() / 1000);
-        // const expirationTime = currentTimestamp + 3600; // 3600 seconds = 1 hour
+        const currentTimestamp = Math.floor(Date.now() / 1800); //30 minutes
 
         if (decoded.exp && currentTimestamp > decoded.exp) {
             return res.status(401).send({ message: `Token has expired` });
@@ -49,12 +48,12 @@ export const isAuthenticated = async (req: express.Request, res: express.Respons
         }
 
         merge(req, { identity: existingUser });
-
+        // console.log('TOKEN VERIFIED')
         next();
     } catch (error) {
         console.log(error);
         if (error instanceof jwt.JsonWebTokenError) {
-            return res.sendStatus(403);
+            return res.status(403).send({ message: `Invalid token. Log in again.` });
         }
         return res.sendStatus(400);
     }
@@ -94,3 +93,36 @@ export const isOperational = async (req: express.Request, res: express.Response,
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 }
+
+export const soleAuth = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        const token = req.headers['authorization'];
+        // console.log('received soleAuth token', token)
+        if (!token) {
+            return res.status(403).send({ message: `Invalid token` });
+        }
+
+        const decoded = jwt.verify(token, process.env.SECRET_KEY) as JwtPayload;
+
+        const currentTimestamp = Math.floor(Date.now() / 1800); //30 minutes
+
+        if (decoded.exp && currentTimestamp > decoded.exp) {
+            return res.status(401).send({ message: `Token has expired` });
+        }
+
+        const existingUser = await getUserBySessionToken(token);
+        if (!existingUser) {
+            return res.sendStatus(403);
+        }
+
+        merge(req, { identity: existingUser });
+
+        return res.sendStatus(200);
+    } catch (error) {
+        console.log(error);
+        if (error instanceof jwt.JsonWebTokenError) {
+            return res.sendStatus(403);
+        }
+        return res.sendStatus(400);
+    }
+};
