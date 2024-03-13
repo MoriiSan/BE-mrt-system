@@ -29,7 +29,7 @@ export const login = async (req: express.Request, res: express.Response) => {
         user.authentication.sessionToken = sessionToken;
 
         await user.save();
-        console.log('sending Token', sessionToken)
+        // console.log('sending Token', sessionToken)
         return res.status(200).json({ user, sessionToken }).end();
     } catch (error) {
         console.log(error);
