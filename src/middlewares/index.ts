@@ -64,7 +64,7 @@ export const isMaintenance = async (req: express.Request, res: express.Response,
         const card = await getCards();
         const tapState = card.some(card => !!card.tapState);
         if (tapState) {
-            return res.status(400).json({ message: 'Maintenance not allowed while may tao.' });
+            return res.status(400).json({ message: 'Maintenance not allowed while people are tapped in.' });
         }
 
         const config = await FareModel.findOne({ fareId: 1 });
