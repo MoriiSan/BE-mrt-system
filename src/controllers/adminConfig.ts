@@ -4,6 +4,7 @@ import {
     getFare,
     updateFare
 } from '../db/fare';
+import { StationModel } from '../db/stations';
 
 export const getMrtFare = async (req: express.Request, res: express.Response) => {
     try {

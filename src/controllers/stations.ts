@@ -88,7 +88,7 @@ export const updateStation = async (req: express.Request, res: express.Response)
         const { stationName, stationCoord, stationConn } = req.body;
 
         if (!stationCoord || !stationConn || !stationName) {
-            return res.status(400).send({ message: `Station is not existing` });
+            return res.status(400).send({ message: `Invalid input` });
 
         }
 
