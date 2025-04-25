@@ -32,7 +32,7 @@ mongoose.Promise = Promise;
 mongoose.connect(MONGO_URL, {
     dbName: 'mrt', // Specify the database name here
 }).then(() => {
-    console.log('Connected to MRT-SYSTEM-DB');
+    console.log('Connected to MRT-WEB-DB');
 }).catch((err) => {
     console.error('Error connecting to MRT-SYSTEM:', err);
 });
