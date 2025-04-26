@@ -4,11 +4,9 @@ import {
     getCardByUid,
     createCard,
     deleteCardByUid,
-    updateCardByUid,
     CardModel,
 } from '../db/cards';
 import { FareModel } from '../db/fare';
-import { random } from 'lodash';
 
 export const getAllCards = async (req: express.Request, res: express.Response) => {
     try {
