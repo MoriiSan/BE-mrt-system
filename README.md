@@ -46,6 +46,6 @@ Server will run at:<br>
 **3. Proceed to Frontend**<br>
 
 Once the backend server is running, clone and run the frontend repository:<br>
-👉 [MoriiSan/MRT-web (Frontend Repo)](https://github.com/MoriiSan/mrt-web) <br>
+👉 [MoriiSan/MRT WEB (Frontend Repo)](https://github.com/MoriiSan/mrt-web) <br>
 
 Follow the instructions there to start the web interface and connect it to this backend.
